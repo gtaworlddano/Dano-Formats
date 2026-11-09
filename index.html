@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LSSD - Format Generator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lssd: {
+              gold: '#C5A059',
+              goldhover: '#B38E46',
+              tan: '#2D2820',
+              tanlight: '#3D362C',
+              badge: '#D4AF37',
+              dark: '#141414',
+              card: '#1E1E1E',
+              border: '#333333',
+              accent: '#8B0000'
+            }
+          },
+          fontFamily: {
+            header: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #141414;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C5A059;
+    }
+  </style>
+</head>
+<body class="bg-lssd-dark text-gray-200 font-sans min-h-screen flex flex-col selection:bg-lssd-gold selection:text-black">
+
+  <!-- TOP HEADER / NAV BAR -->
+  <header class="bg-lssd-tan border-b border-lssd-gold/30 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <!-- LSSD Badge Icon -->
+        <div class="w-12 h-12 bg-lssd-gold rounded-full flex items-center justify-center text-lssd-dark shadow-lg ring-2 ring-lssd-gold/50">
+          <i class="fa-solid font-bold fa-shield-halved text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="font-header font-bold text-base sm:text-lg text-lssd-gold tracking-wider uppercase">
+            Los Santos County Sheriff's Department
+          </h1>
+          <p class="text-xs text-gray-300 font-semibold tracking-wide uppercase">
+            Format Generator App
+          </p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: CONTROLS & FORM INPUTS (5 COLS) -->
+    <div class="lg:col-span-5 space-y-6">
+      
+      <!-- CATEGORY & TEMPLATE SELECTOR CARD -->
+      <div class="bg-lssd-card border border-lssd-border rounded-xl p-5 shadow-lg space-y-4">
+        <h2 class="text-sm font-bold text-lssd-gold uppercase tracking-wider flex items-center">
+          <i class="fa-solid fa-folder-tree mr-2"></i> Select Document Format
+        </h2>
+
+        <!-- Main Category Tabs -->
+        <div class="grid grid-cols-2 gap-2 p-1 bg-lssd-dark/60 rounded-lg border border-lssd-border">
+          <button id="tab-reinstatement" onclick="switchCategory('reinstatements')" class="py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 bg-lssd-gold text-black shadow">
+            <i class="fa-solid fa-user-check"></i>
+            <span>Reinstatements</span>
+          </button>
+          <button id="tab-lateral" onclick="switchCategory('laterals')" class="py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-right-left"></i>
+            <span>Laterals</span>
+          </button>
+        </div>
+
+        <!-- Specific Template Select Dropdown -->
+        <div>
+          <label for="template-select" class="block text-xs font-medium text-gray-400 mb-1">Specific Status Letter</label>
+          <select id="template-select" onchange="loadSelectedTemplate()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-lssd-gold transition-all">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+
+        <!-- OOC Wrapper Checkbox -->
+        <div class="pt-2 border-t border-lssd-border/60">
+          <label class="flex items-center space-x-3 cursor-pointer bg-lssd-dark/80 p-3 rounded-lg border border-lssd-border/80 hover:border-lssd-gold/40 transition-all">
+            <input type="checkbox" id="input-ooc-wrapper" onchange="updateBBCode()" class="w-4 h-4 text-lssd-gold rounded border-lssd-border focus:ring-lssd-gold bg-lssd-dark accent-amber-500">
+            <div>
+              <span class="text-xs font-bold text-gray-200 block">OOC Application Response</span>
+              <span class="text-[11px] text-gray-400">Wraps entire output in <code class="text-lssd-gold">[ooc] ... [/ooc]</code> tags</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- FORM INPUTS CARD -->
+      <div class="bg-lssd-card border border-lssd-border rounded-xl p-5 shadow-lg space-y-4">
+        <div class="flex items-center justify-between border-b border-lssd-border/60 pb-3">
+          <h2 class="text-sm font-bold text-lssd-gold uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-pen-to-square mr-2"></i> Application Variables
+          </h2>
+          <button onclick="resetFields()" class="text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center">
+            <i class="fa-solid fa-rotate-left mr-1"></i> Clear Fields
+          </button>
+        </div>
+
+        <form id="format-form" class="space-y-4" onsubmit="event.preventDefault();">
+          
+          <!-- APPLICANT SECTION -->
+          <div class="space-y-3">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest text-[10px] block">Applicant Information</span>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Salutation</label>
+                <select id="input-salutation" oninput="updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+                  <option value="Mr.">Mr.</option>
+                  <option value="Ms.">Ms.</option>
+                  <option value="Mrs.">Mrs.</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">First Name</label>
+                <input type="text" id="input-firstname" placeholder="e.g. John" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Last Name</label>
+                <input type="text" id="input-lastname" placeholder="e.g. Vance" oninput="updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+            </div>
+            <p class="text-[10px] text-gray-500 italic">* First Name is for reference only; only Last Name is populated in the BBCode letterhead.</p>
+          </div>
+
+          <!-- CONDITIONAL OFFER SPECIFIC FIELD -->
+          <div id="rank-field-container" class="space-y-1 hidden">
+            <label class="block text-xs font-medium text-lssd-gold mb-1 flex items-center">
+              <i class="fa-solid fa-award mr-1.5"></i> Offered Civil Service Title / Rank
+            </label>
+            <input type="text" id="input-rank" placeholder="e.g. Deputy Sheriff or Deputy Sheriff Bonus I" oninput="updateBBCode()" class="w-full bg-lssd-dark border border-lssd-gold/40 rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+          </div>
+
+          <hr class="border-lssd-border/40">
+
+          <!-- SIGNING OFFICIAL SECTION -->
+          <div class="space-y-3">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest text-[10px] block">Issuing Official Information</span>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Full Name</label>
+                <input type="text" id="input-official-name" placeholder="e.g. Jane Doe" oninput="saveOfficialData(); updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Rank / Title</label>
+                <input type="text" id="input-official-rank" placeholder="e.g. Captain" oninput="saveOfficialData(); updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Unit of Assignment</label>
+                <input type="text" id="input-official-unit" placeholder="e.g. Central Patrol Division" oninput="saveOfficialData(); updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Role / Title within Division</label>
+                <input type="text" id="input-official-role" placeholder="e.g. Division Chief" oninput="saveOfficialData(); updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Signature Direct Image URL</label>
+              <div class="relative">
+                <input type="text" id="input-signature-url" placeholder="insert_your_signature_here" oninput="saveOfficialData(); updateBBCode()" class="w-full bg-lssd-dark border border-lssd-border rounded-lg pl-3 pr-10 py-2 text-sm text-gray-200 focus:ring-2 focus:ring-lssd-gold focus:outline-none font-mono text-xs">
+                <i class="fa-solid fa-signature absolute right-3 top-2.5 text-gray-500"></i>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: BBCODE OUTPUT (7 COLS) -->
+    <div class="lg:col-span-7 space-y-6 flex flex-col">
+      
+      <!-- ACTION HEADER -->
+      <div class="bg-lssd-card border border-lssd-border rounded-xl p-4 shadow-lg flex items-center justify-between">
+        <span class="text-xs font-bold text-lssd-gold uppercase tracking-wider flex items-center">
+          <i class="fa-solid fa-code mr-2"></i> Output BBCode
+        </span>
+
+        <!-- Copy Action Button -->
+        <button id="copy-btn" onclick="copyBBCodeToClipboard()" class="bg-green-700 hover:bg-green-600 text-white px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center shadow-lg transition-all transform active:scale-95">
+          <i class="fa-solid fa-copy mr-2 text-sm"></i> Copy BBCode
+        </button>
+      </div>
+
+      <!-- MAIN OUTPUT CONTAINER -->
+      <div class="bg-lssd-card border border-lssd-border rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden min-h-[500px]">
+        
+        <!-- RAW BBCODE EDITOR VIEW -->
+        <div id="bbcode-output-container" class="flex-1 flex flex-col p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono text-gray-400">Finalized BBCode</span>
+            <span id="char-count" class="text-xs font-mono text-lssd-gold">0 chars</span>
+          </div>
+          <textarea id="bbcode-output" readonly class="w-full flex-1 bg-lssd-dark/90 text-amber-100 font-mono text-xs p-4 rounded-lg border border-lssd-border/80 focus:outline-none focus:ring-1 focus:ring-lssd-gold resize-none leading-relaxed min-h-[450px]"></textarea>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State management
+    let currentCategory = 'reinstatements';
+
+    // BBCode Template definitions
+    const TEMPLATES = {
+      reinstatements: [
+        {
+          id: 'rein-received',
+          name: 'Reinstatement Received',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST RECEIVED[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. We are informing you that your request has been acknowledged and forwarded to the Department's Command Staff for review, deliberation, and conclusion.
+
+The deliberation will include a thorough examination of your previous service with the Department and personal background information. While exigent circumstances may preclude a fixed time frame, you should expect a response to your request within 72 hours.
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-conditional',
+          name: 'Conditional Offer of Employment',
+          hasRankField: true,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. Your request has been deliberated and concluded by the Department's Command Staff.
+
+We are presenting you with a conditional offer of employment at the civil service title of [b]${data.rank}[/b]. This position includes the base annual gross salary, notwithstanding hazard pay or assignment bonus.
+
+It is incumbent of you to terminate your employment with any Department within the County of Los Santos before formally accepting this offer.
+
+Please return a letter with your intent to accept or decline this employment offer.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-conditional-ftp',
+          name: 'Conditional Offer of Employment (w/ FTP Refresher)',
+          hasRankField: true,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. Your request has been deliberated and concluded by the Department's Command Staff.
+
+We are presenting you with a conditional offer of employment at the civil service title of [b]${data.rank}[/b]. This position includes the base annual gross salary, notwithstanding hazard pay or assignment bonus. [b]You will be required to complete a Field Training Program (FTP) Refresher prior to being authorized to patrol independently.[/b]
+
+It is incumbent of you to terminate your employment with any Department within the County of Los Santos before formally accepting this offer.
+
+Please return a letter with your intent to accept or decline this employment offer.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-post-accept',
+          name: 'Post-Acceptance Information',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT ACCEPTANCE INFORMATION[/b][/center]
+
+
+As you have completed the conditions attached to the previous employment offer, I would like to welcome you to the Los Santos County Sheriff's Department. Please do not hesitate to contact us if you require further information.
+
+Please review, and sign (if indicated), the following:
+
+[list=none][*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18792]The Sheriff's Reference Book[/url]; 
+[*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18790]The Manual of Policy and Procedures[/url], [b](([/b]
+[*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18794]the OOC Manual of Policy and Procedures[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=150&t=141]the employee acknowledgment of understanding[/url]; [b]))[/b]
+[*][url=https://lssd.gta.world/viewforum.php?f=139]Recent Field Operations Directives[/url]; and
+[*][url=https://lssd.gta.world/viewforum.php?f=1091]Request a patrol station assignment[/url].[/list]
+
+[b](([/b] Additionally, see the following topics for important OOC information:
+
+[list=none][*][url=https://lssd.gta.world/viewforum.php?f=1004]Our official faction lore[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=504&t=191]OOC Meritocracy and IC Politics[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=504&t=14953]Sheriff's Communications Center & You[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=368&t=770]Random Police RP tips[/url]; and
+[*][url=https://lssd.gta.world/viewtopic.php?t=57455]Corruption Permission / Guide[/url]. [b]))[/b][/list]
+
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-denied',
+          name: 'Denied',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. Your request has been deliberated and concluded by the Department's Command Staff.
+
+Pursuant to hiring standards and personnel guidelines, your reinstatement has unfortunately been [b]declined[/b].
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-denied-recruitment',
+          name: 'Denied — Recruitment',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. Your request has been deliberated and concluded by the Department's Command Staff.
+
+Pursuant to hiring standards and personnel guidelines, your reinstatement has unfortunately been [b]declined[/b]. Please do not let this verdict discourage you from seeking employment with the Department through entry-level recruitment.
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'rein-disqualified',
+          name: 'Denied — Disqualified (( Faction Banned ))',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]REINSTATEMENT REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your request for reinstatement to the Los Santos County Sheriff's Department. Your request has been deliberated and concluded by the Department's Command Staff.
+
+Pursuant to hiring standards and personnel guidelines, your reinstatement has been [b]declined[/b]. Furthermore, you have been [b]disqualified[/b] from seeking employment with the Department.
+
+If you have any questions or require additional information, please contact any Executive Staff official of the Department.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        }
+      ],
+      laterals: [
+        {
+          id: 'lat-received',
+          name: 'Transfer Received',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]LATERAL TRANSFER REQUEST RECEIVED[/b][/center]
+
+
+This letter is in response to your application for employment to the Los Santos County Sheriff's Department. We are informing you that your application has been acknowledged and forwarded to the Department's Command Staff for review, deliberation, and conclusion.
+
+The deliberation will include a thorough examination of your previous service with the Department and personal background information. While exigent circumstances may preclude a fixed time frame, you should expect a response to your request within 72 hours.
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'lat-conditional',
+          name: 'Conditional Offer of Employment',
+          hasRankField: true,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]TRANSFER REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your application for employment to the Los Santos County Sheriff's Department. Your application has been deliberated and concluded by the Department's Command Staff.
+
+We are presenting you with a conditional offer of employment at the civil service title of [b]${data.rank}[/b]. This position includes the base annual gross salary, notwithstanding hazard pay or assignment bonus.
+
+It is incumbent of you to terminate your employment with any Department within the County of Los Santos before formally accepting this offer.
+
+Please return a letter with your intent to accept or decline this employment offer.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'lat-conditional-ftp',
+          name: 'Conditional Offer of Employment (w/ FTP Refresher)',
+          hasRankField: true,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]TRANSFER REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your application for employment to the Los Santos County Sheriff's Department. Your application has been deliberated and concluded by the Department's Command Staff.
+
+We are presenting you with a conditional offer of employment at the civil service title of [b]${data.rank}[/b]. This position includes the base annual gross salary, notwithstanding hazard pay or assignment bonus. [b]You will be required to complete a Field Training Program (FTP) Refresher prior to being authorized to patrol independently.[/b]
+
+It is incumbent of you to terminate your employment with any Department within the County of Los Santos before formally accepting this offer.
+
+Please return a letter with your intent to accept or decline this employment offer.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'lat-post-accept',
+          name: 'Post-Acceptance Information',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]TRANSFER ACCEPTANCE INFORMATION[/b][/center]
+
+
+As you have completed the conditions attached to the previous employment offer, I would like to welcome you to the Los Santos County Sheriff's Department. Please do not hesitate to contact us if you require further information.
+
+Please review, and sign (if indicated), the following:
+
+[list=none][*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18792]The Sheriff's Reference Book[/url]; 
+[*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18790]The Manual of Policy and Procedures[/url], [b](([/b]
+[*][url=https://lssd.gta.world/viewtopic.php?f=268&t=18794]the OOC Manual of Policy and Procedures[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=150&t=141]the employee acknowledgment of understanding[/url]; [b]))[/b]
+[*][url=https://lssd.gta.world/viewforum.php?f=139]Recent Field Operations Directives[/url]; and
+[*][url=https://lssd.gta.world/viewforum.php?f=1091]Request a patrol station assignment[/url].[/list]
+
+[b](([/b] Additionally, see the following topics for important OOC information:
+
+[list=none][*][url=https://lssd.gta.world/viewforum.php?f=1004]Our official faction lore[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=504&t=191]OOC Meritocracy and IC Politics[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=504&t=14953]Sheriff's Communications Center & You[/url];
+[*][url=https://lssd.gta.world/viewtopic.php?f=368&t=770]Random Police RP tips[/url]; and
+[*][url=https://lssd.gta.world/viewtopic.php?t=57455]Corruption Permission / Guide[/url]. [b]))[/b][/list]
+
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'lat-denied',
+          name: 'Denied',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]TRANSFER REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your application for employment to the Los Santos County Sheriff's Department. Your application has been deliberated and concluded by the Department's Command Staff.
+
+Pursuant to hiring standards and personnel guidelines, your application has unfortunately been [b]declined[/b].
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        },
+        {
+          id: 'lat-denied-recruitment',
+          name: 'Denied — Recruitment',
+          hasRankField: false,
+          getContent: (data) => `[letterhead]Dear ${data.salutation} ${data.lastname}:
+
+
+[center][b]TRANSFER REQUEST VERDICT[/b][/center]
+
+
+This letter is in response to your application for employment to the Los Santos County Sheriff's Department. Your application has been deliberated and concluded by the Department's Command Staff.
+
+Pursuant to hiring standards and personnel guidelines, your application has unfortunately been [b]declined[/b]. Please do not let this verdict discourage you from seeking employment with the Department through entry-level recruitment.
+
+Should you have any questions or require additional information, please contact the undersigned official indicated at the bottom of this letter.
+
+Sincerely,
+
+GRANT MENDEZ, SHERIFF
+[img]${data.sigUrl}[/img]
+${data.officialName}${data.officialRank ? ', ' + data.officialRank : ''}
+${data.officialUnit}${data.officialRole ? ', ' + data.officialRole : ''}[/letterhead]`
+        }
+      ]
+    };
+
+    // Category Switching
+    function switchCategory(category) {
+      currentCategory = category;
+      const tabRein = document.getElementById('tab-reinstatement');
+      const tabLat = document.getElementById('tab-lateral');
+
+      if (category === 'reinstatements') {
+        tabRein.className = "py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 bg-lssd-gold text-black shadow";
+        tabLat.className = "py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 text-gray-400 hover:text-white";
+      } else {
+        tabLat.className = "py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 bg-lssd-gold text-black shadow";
+        tabRein.className = "py-2.5 text-xs font-bold uppercase rounded-md transition-all flex items-center justify-center space-x-2 text-gray-400 hover:text-white";
+      }
+
+      populateTemplateDropdown();
+      loadSelectedTemplate();
+    }
+
+    // Populate Template Select options based on category
+    function populateTemplateDropdown() {
+      const select = document.getElementById('template-select');
+      select.innerHTML = '';
+      
+      const templates = TEMPLATES[currentCategory];
+      templates.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t.id;
+        option.textContent = t.name;
+        select.appendChild(option);
+      });
+    }
+
+    // Handle template change
+    function loadSelectedTemplate() {
+      const select = document.getElementById('template-select');
+      const selectedId = select.value;
+      const templateList = TEMPLATES[currentCategory];
+      const template = templateList.find(t => t.id === selectedId) || templateList[0];
+
+      const rankContainer = document.getElementById('rank-field-container');
+      if (template.hasRankField) {
+        rankContainer.classList.remove('hidden');
+      } else {
+        rankContainer.classList.add('hidden');
+      }
+
+      updateBBCode();
+    }
+
+    // Helper to get form input values
+    function getFormData() {
+      return {
+        salutation: document.getElementById('input-salutation').value || 'Mr.',
+        firstname: document.getElementById('input-firstname').value.trim(),
+        lastname: document.getElementById('input-lastname').value.trim() || 'Lastname',
+        rank: document.getElementById('input-rank').value.trim() || 'Rank',
+        officialName: document.getElementById('input-official-name').value.trim() || 'Firstname Lastname',
+        officialRank: document.getElementById('input-official-rank').value.trim() || 'Rank',
+        officialUnit: document.getElementById('input-official-unit').value.trim() || 'Central Patrol Division',
+        officialRole: document.getElementById('input-official-role').value.trim() || 'Division Chief',
+        sigUrl: document.getElementById('input-signature-url').value.trim() || 'insert_your_signature_here',
+        isOOC: document.getElementById('input-ooc-wrapper').checked
+      };
+    }
+
+    // Update BBCode output textarea
+    function updateBBCode() {
+      const data = getFormData();
+      const select = document.getElementById('template-select');
+      const selectedId = select.value;
+      const templateList = TEMPLATES[currentCategory];
+      const template = templateList.find(t => t.id === selectedId) || templateList[0];
+
+      let bbcode = template.getContent(data);
+
+      if (data.isOOC) {
+        bbcode = `[ooc]${bbcode}[/ooc]`;
+      }
+
+      const outputElem = document.getElementById('bbcode-output');
+      outputElem.value = bbcode;
+      document.getElementById('char-count').textContent = `${bbcode.length} chars`;
+    }
+
+    // Local Storage helpers for official data
+    function saveOfficialData() {
+      const officialData = {
+        name: document.getElementById('input-official-name').value,
+        rank: document.getElementById('input-official-rank').value,
+        unit: document.getElementById('input-official-unit').value,
+        role: document.getElementById('input-official-role').value,
+        sigUrl: document.getElementById('input-signature-url').value
+      };
+      localStorage.setItem('lssd_official_data', JSON.stringify(officialData));
+    }
+
+    function loadSavedOfficialData() {
+      const saved = localStorage.getItem('lssd_official_data');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.name !== undefined) document.getElementById('input-official-name').value = data.name;
+          if (data.rank !== undefined) document.getElementById('input-official-rank').value = data.rank;
+          if (data.unit !== undefined) document.getElementById('input-official-unit').value = data.unit;
+          if (data.role !== undefined) document.getElementById('input-official-role').value = data.role;
+          if (data.sigUrl !== undefined) document.getElementById('input-signature-url').value = data.sigUrl;
+        } catch (e) {
+          console.error('Error parsing saved official data:', e);
+        }
+      }
+    }
+
+    // Clear Fields button
+    function resetFields() {
+      document.getElementById('input-firstname').value = '';
+      document.getElementById('input-lastname').value = '';
+      document.getElementById('input-rank').value = '';
+      updateBBCode();
+    }
+
+    // Copy BBCode to clipboard
+    function copyBBCodeToClipboard() {
+      const bbcodeElem = document.getElementById('bbcode-output');
+      bbcodeElem.select();
+      document.execCommand('copy');
+
+      const btn = document.getElementById('copy-btn');
+      const originalHTML = btn.innerHTML;
+
+      btn.innerHTML = `<i class="fa-solid fa-check mr-2 text-sm"></i> Copied!`;
+      btn.classList.remove('bg-green-700', 'hover:bg-green-600');
+      btn.classList.add('bg-lssd-gold', 'text-black');
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('bg-lssd-gold', 'text-black');
+        btn.classList.add('bg-green-700', 'hover:bg-green-600');
+      }, 2000);
+    }
+
+    // Initialize application on page load
+    window.onload = function() {
+      loadSavedOfficialData();
+      populateTemplateDropdown();
+      loadSelectedTemplate();
+    };
+  </script>
+</body>
+</html>
